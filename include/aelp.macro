@@ -1,0 +1,756 @@
+;;core
+(define-macro macro: () (lambda (L $Env) (: aelp expand_macro: L)))
+
+(macro: ~ L (: aelp expand_~ L))
+
+(macro: func: L (~ aelp:expand_func: L))
+
+(macro: \ L (~ aelp:expand_\ L))
+	
+;; arrows
+(macro: -> L (~ aelp:expand_-> L $Env))
+  
+(macro: ->* L (~ aelp:expand_->* L $Env))
+
+(macro: ->> L (~ aelp:expand_->> L $Env))
+
+(macro: ->1 L `(prog1 ,@L))
+(macro: ->2 L `(prog2 ,@L))
+
+;(macro: => L (~ aelp1:expand_=> L))
+
+;branch
+(macro: :-
+	`(,X ,Y ,Z)
+		`(if ,X ,Y ,Z)
+	L (->
+		`(,X ,Y . ,T) = (reverse L)
+		`(if (&& ,@(reverse T)) ,Y ,X)))
+
+(macro: :-!
+	`(,X ,Y ,Z)
+		`(if (!! ,X) ,Y ,Z)
+	L (->
+		`(,X ,Y . ,T) = (reverse L)
+		`(if (!! (&& ,@(reverse T))) ,Y ,X)))
+
+(macro: :-*
+	`(,X ,Y ,Z)
+		`(if ,X ,Y ,Z)
+	L (->
+		`(,X ,Y . ,T) = (reverse L)
+		`(if (|| ,@(reverse T)) ,Y ,X)))
+
+(macro: :-= `(,H . ,T) (->*
+	L = (reverse T)
+	`(,X ,Y . ,T') = L
+	`(if (=:= ,H ,@(reverse T')) ,Y ,X)))
+
+(macro: :-!= `(,H . ,T) (->*
+	L = (reverse T)
+	`(,X ,Y . ,T') = L
+	`(if (=/= ,H ,@(reverse T')) ,Y ,X)))
+
+(macro: :-*= `(,H . ,T) (->*
+	L = (reverse T)
+	`(,X ,Y . ,T') = L
+	T'' = (fold (\BA. `((=:= ,H ,B) . ,A)) () T')
+	`(if (|| ,@T'') ,Y ,X)))
+
+(macro: := L (->
+	L' = (~ aelp:unchain L 2)
+	(reduce (\ (`(,X ,Y) A) `(if ,X ,Y ,A)) ''false L')))
+
+(macro: :+ L (~ aelp:expand_:+ L))
+
+(macro: :-guard (A B C)
+	`(:-* (=:= ,A 'when) (=:= ,A '&) (=:= (hd (atl ,A)) #\&) ,B ,C))
+
+; guards
+(macro: & L `(when ,@L))
+(macro: &* L `(& (|| ,@L)))
+(macro: &= L `(& (=:= ,@L)))
+(macro: &*= `(,H . ,T) `(&* ,@(fold (\XY. (cons `(=:= ,H ,X) Y)) () T)))
+(macro: &!= L `(& (=/= ,@L)))
+(macro: &! L `(& (not ,@L)))
+(macro: &> L `(& (> ,@L)))
+(macro: &< L `(& (< ,@L)))
+(macro: &>= L `(& (>= ,@L)))
+(macro: &<= L `(& (=< ,@L)))
+;(macro: &odd? (X) `(& (=:= (rem ,X 2) 1)))
+;(macro: &even? (X) `(& (=:= (rem ,X 2) 0)))
+(macro: &\? (X) `(& (\? ,X)))
+(macro: &int? (X) `(& (int? ,X)))
+(macro: &fot? (X) `(& (fot? ,X)))
+(macro: &num? (X) `(& (num? ,X)))
+(macro: &atm? (X) `(& (atm? ,X)))
+(macro: &tup? (X) `(& (tup? ,X)))
+(macro: &lst? (X) `(& (lst? ,X)))
+(macro: &pid? (X) `(& (pid? ,X)))
+(macro: &nil? (X) `(& (nil? ,X)))
+(macro: &con? (X) `(& (con? ,X)))
+(macro: &fun? (X) `(& (fun? ,X)))
+(macro: &bin? (X) `(& (bin? ,X)))
+
+(macro: &!\? (X) `(& (not (\? ,X))))
+(macro: &!int? (X) `(& (not (int? ,X))))
+(macro: &!fot? (X) `(& (not (fot? ,X))))
+(macro: &!num? (X) `(& (not (num? ,X))))
+(macro: &!atm? (X) `(& (not (atm? ,X))))
+(macro: &!tup? (X) `(& (not (tup? ,X))))
+(macro: &!lst? (X) `(& (not (lst? ,X))))
+(macro: &!pid? (X) `(& (not (pid? ,X))))
+(macro: &!nil? (X) `(& (not (nil? ,X))))
+(macro: &!con? (X) `(& (not (con? ,X))))
+(macro: &!fun? (X) `(& (not (fun? ,X))))
+(macro: &!bin? (X) `(& (not (bin? ,X))))
+(macro: &!digi? (X) `(& (not (digi? ,X))))
+
+(macro: guard? (A)
+	`(:-guard ,A 'true 'false))
+
+;; operator
+(macro: <= (A B) `(=< ,A ,B))
+;(macro: <~ L `(binary pattern)
+(macro: *= `(,H . ,T) `(|| ,@(fold (\XY. `((== ,H ,X) . ,Y)) () T)))
+(macro: *== `(,H . ,T) `(|| ,@(fold (\XY. `((=:= ,H ,X) . ,Y)) () T)))
+
+(macro: != L `(call 'erlang '/= ,@L))
+
+(macro: === L `(call 'erlang '=:= ,@L))
+(macro: !== L `(call 'erlang '=/= ,@L))
+
+(macro: /, L `(div ,@L))
+(macro: %, L `(rem ,@L))
+
+;; predicate
+(macro: int? (X) `(is_integer ,X))
+(macro: fot? (X) `(is_float ,X))
+(macro: num? (X) `(is_number ,X))
+(macro: atm? (X) `(is_atom ,X))
+(macro: ref? (X) `(is_reference ,X))
+(macro: fun?
+	`(,X) `(is_function ,X)
+	`(,X ,Y) `(is_function ,X ,Y))
+(macro: \? (X) `(fun? ,X))
+(macro: pot? (X) `(is_port ,X))
+(macro: pid? (X) `(is_pid ,X))
+(macro: tup? (X) `(is_tuple ,X))
+(macro: rec? (X Y) `(is_record ,X ,Y))
+(macro: map? (X) `(is_map ,X))
+(macro: nil? (X) `(=:= ,X ()))
+(macro: lst? (X) `(is_list ,X))
+(macro: bin? (X) `(is_binary ,X))
+(macro: bit? (X) `(is_bitstring ,X))
+(macro: con? (X) `(&& (is_list ,X) (not (=:= ,X ()))))
+
+(macro: digi? (D) `(.. (.. ,D >= 48) && (.. ,D <= 57)))
+
+(macro: alive?
+	L (&nil? L) `(is_alive)
+	`(,X) `(is_process_alive ,X))
+
+(macro: died? L `(/ (alive? ,@L)))
+
+(macro: builtin? (M F A) `(~ erlang:is_builtin ,M ,F ,A))
+
+(macro: \. (A) `(\ () ,A))
+
+(macro: \_. (A) `(\ (_) ,A))
+(macro: \__. (A) `(\ (_ _) ,A))
+(macro: \___. (A) `(\ (_ _ _) ,A))
+(macro: \_4. (A) `(\ (_ _ _ _) ,A))
+(macro: \_5. (A) `(\ (_ _ _ _ _) ,A))
+
+(macro: \X. (A) `(\ (X) ,A))
+(macro: \XY. (A) `(\ (X Y) ,A))
+(macro: \XYZ. (A) `(\ (X Y Z) ,A))
+
+(macro: \Y. (A) `(\ (Y) ,A))
+(macro: \Z. (A) `(\ (Z) ,A))
+
+(macro: \X'. (A) `(\ (X') ,A))
+(macro: \X'Y'. (A) `(\ (X' Y') ,A))
+(macro: \X'Y'Z'. (A) `(\ (X' Y' Z') ,A))
+
+(macro: \A. (X) `(\ (A) ,X))
+
+(macro: \AB. (X) `(\ (A B) ,X))
+(macro: \ABC. (X) `(\ (A B C) ,X))
+(macro: \ABCD. (X) `(\ (A B C D) ,X))
+(macro: \ABCDE. (X) `(\ (A B C D E) ,X))
+(macro: \ABCDEF. (X) `(\ (A B C D E F) ,X))
+
+(macro: \BA. (X) `(\ (B A) ,X))
+(macro: \CBA. (X) `(\ (C B A) ,X))
+(macro: \DCBA. (X) `(\ (D C B A) ,X))
+(macro: \EDCBA. (X) `(\ (E D C B A) ,X))
+(macro: \FEDCBA. (X) `(\ (F E D C B A) ,X))
+
+(macro: <<
+	`(,G ,F) `(\X. (:. ,G (:. ,F X)))
+	`(,H ,G ,F) `(\X. (:. ,H (:. ,G (:. ,F X))))
+	`(,I ,H ,G ,F) `(\X. (:. ,I (:. ,H (:. ,G (:. ,F X)))))
+	`(,J ,I ,H ,G ,F) `(\X. (:. ,J (:. ,I (:. ,H (:. ,G (:. ,F X)))))))
+
+(macro: >>
+	`(,F ,G) `(\X. (:. ,G (:. ,F X)))
+	`(,F ,G ,H) `(\X. (:. ,H (:. ,G (:. ,F X))))
+	`(,F ,G ,H ,I) `(\X. (:. ,I (:. ,H (:. ,G (:. ,F X)))))
+	`(,F ,G ,H ,I ,J) `(\X. (:. ,J (:. ,I (:. ,H (:. ,G (:. ,F X)))))))
+
+(macro: ~> L (->*
+	F\1 = (\
+		'bs 'bytes
+		'bz 'bits
+		'sz1 '(size 1)
+		'sz2 '(size 2)
+		'sz3 '(size 3)
+		'sz4 '(size 4)
+		'sz5 '(size 5)
+		'sz6 '(size 6)
+		'sz7 '(size 7)
+		'sz8 '(size 8)
+		'sz9 '(size 9)
+		`(sz ,N) `(size ,N)
+		X X)
+	L' = (fmap (\
+		X (&lst? X) (fmap F\1 X)
+		X X) L)
+	`(binary ,@L')))
+
+;(macro: %> L (->*
+;	L' = (reduce (\
+;		(`(,K ,V)  Acc) `(,K ,V ,@Acc)
+;		(X Acc) (&atm? X) (->
+;			X' = (lta! (~ aelp:camel_to_snake (atl X)))
+;			`(',X' ,X ,@Acc))) () L)
+;	`(map ,@L')))
+
+(macro: %> L (->*
+	L' = (reduce (\
+		(`(,K ,V)  Acc) `(,K ,V ,@Acc)
+		(X Acc) (&atm? X) (->
+			X' = (lta! (~ aelp:camel_to_snake (atl X)))
+			`(',X' ,X ,@Acc))) () L)
+	`(map ,@L')))
+
+(macro: % L `(%> ,@L))
+
+(macro: %! (K M V) `(mset ,M ,K ,V))
+(macro: %@ (K M) `(mref ,M ,K))
+(macro: %| (K M V) `(mupd ,M ,K ,V))
+
+(macro: :' L `(call ,@L))
+(macro: :. L `(funcall ,@L))
+(macro: :@ L `(apply ,@L))
+(macro: :* L `(eval ,@L))
+
+(macro: time (X) (&atm? X) (~ aelp:time_conv X))
+
+(macro: zzz L `(~ erlang:hibernate ,@L))
+(macro: zzz* L `(~ proc_lib:hibernate ,@L))
+
+(macro: async: (Name Args Body) `(func: ,Name ,Args (->
+    Parent = (self)
+    (% (\. (->
+        Result = ,Body
+        (! Parent Result))))
+    'promise)))
+
+(macro: await (X) `(?: ,X))
+(macro: async.all_settled `(todo))
+(macro: async.all `(todo))
+(macro: async.race `(todo))
+(macro: async.any `(todo))
+
+;; concurrency primitive
+(macro: $ L `(spawn ,@L))
+(macro: $\. L `(spawn (\. ,@L)))
+
+(macro: $| L `(spawn_link ,@L))
+(macro: $|\ L `(spawn_link (\. ,@L)))
+
+(macro: $: L `(spawn_monitor ,@L))
+(macro: $:\ L `(spawn_monitor (\. ,@L)))
+
+(macro: $, L `(spawn_opt ,@L))
+(macro: $,\ L `(spawn_opt (\. ,@L)))
+
+(macro: $* L `(~ proc_lib:spawn ,@L))
+(macro: $*| L `(~ proc_lib:spawn_link ,@L))
+(macro: $*, L `(~ proc_lib:spawn_opt ,@L))
+(macro: $*> L `(~ proc_lib:start ,@L))
+(macro: $*>| L `(~ proc_lib:start_link ,@L))
+(macro: $*>, L `(~ proc_lib:start_opt ,@L))
+
+(macro: -# L `(catch ,@L))
+(macro: *< L `(throw ,@L))
+(macro: *<< L `(error ,@L))
+(macro: >* L `(exit ,@L))
+(macro: >** L (->
+	P = (:+ L
+		X (&nil? X) '(self)
+		X (& (1lst? X)) X)
+	`(~ proc_lib:stop ,P)))
+
+(macro: +ti L `(: erlang start_timer ,@L))
+(macro: -ti L `(: erlang cancel_timer ,@L))
+(macro: ti@ L `(: erlang read_timer ,@L))
+
+(macro: gl@ () `(group_leader))
+(macro: gl! (Gl P) `(group_leader ,Gl ,P))
+
+(macro: pd@ L `(get ,@L))
+(macro: pdk@ L `(get_keys ,@L))
+(macro: -pd K `(erase ,K))
+(macro: +pd (K V) `(put ,K ,v))
+
+(macro: >*! (P) `(exit ,P 'kill))
+(macro: kill (P) `(exit ,P 'kill))
+
+(macro: !? (P M) `(->
+	(! ,P `#(,,M ,(self)))
+	(? Msg Msg)))
+
+(macro: ? L (~ aelp:expand_? L))
+
+(macro: ?: (X) `(-> ,X (receive (-Any- -Any-))))
+
+(macro: ?! L `(? `#(,Msg ,From) (! From (:. (\ ,@L) Msg))))
+
+(macro: !< L `(~ proc_lib:init_ack ,@L))
+(macro: !^ (Port Msg) `(! ,Port (tuple (self) #(command ,Msg))))
+
+(macro: nid@ (Pid)
+	`(lti (~ lists:takewhile (\X. (=/= X #\.)) (cdr (ptl ,Pid)) ~)))
+
+(macro: remote? (Pid) `(=/= (nid@ ,Pid) 0))
+
+;(macro: +^
+(macro: -^ (Port) `(! ,Port (tuple (self) 'close)))
+(macro: ^@ (Port) `(~ erlang:port_info ,Port))
+
+(macro: +| (Id) `(link ,Id))
+(macro: -| (Id) `(unlink ,Id))
+
+(macro: +: (Id) `(monitor 'process ,Id))
+(macro: -: (Id) `(demonitor ,Id))
+(macro: +^: (Id) `(monitor 'port ,Id))
+;(macro: -^: (Id) `(monitor 'port ,Id))
+
+(macro: ?atm (A) `(bytes (atb ,A)))
+(macro: ?lst (L) `(length ,L))
+(macro: ?tup (T) `(tuple_size ,T))
+(macro: ?bin (B) `(byte_size ,B))
+(macro: ?bit (B) `(bit_size ,B))
+(macro: ?map (M) `(map_size ,B))
+
+(macro: 0lst? (L) `(=:= (length ,L) 0))
+(macro: 1lst? (L) `(=:= (length ,L) 1))
+(macro: 2lst? (L) `(=:= (length ,L) 2))
+(macro: 3lst? (L) `(=:= (length ,L) 3))
+(macro: 4lst? (L) `(=:= (length ,L) 4))
+(macro: 5lst? (L) `(=:= (length ,L) 5))
+(macro: 6lst? (L) `(=:= (length ,L) 6))
+(macro: 7lst? (L) `(=:= (length ,L) 7))
+(macro: 8lst? (L) `(=:= (length ,L) 8))
+(macro: 9lst? (L) `(=:= (length ,L) 9))
+(macro: nlst? (N L) `(=:= (length ,L) ,N))
+
+(macro: 0tup? (T) `(=:= (tuple_size ,T) 0))
+(macro: 1tup? (T) `(=:= (tuple_size ,T) 1))
+(macro: 2tup? (T) `(=:= (tuple_size ,T) 2))
+(macro: 3tup? (T) `(=:= (tuple_size ,T) 3))
+(macro: 4tup? (T) `(=:= (tuple_size ,T) 4))
+(macro: 5tup? (T) `(=:= (tuple_size ,T) 5))
+(macro: 6tup? (T) `(=:= (tuple_size ,T) 6))
+(macro: 7tup? (T) `(=:= (tuple_size ,T) 7))
+(macro: 8tup? (T) `(=:= (tuple_size ,T) 8))
+(macro: 9tup? (T) `(=:= (tuple_size ,T) 9))
+(macro: ntup? (N T) `(=:= (tuple_size ,T) ,N))
+
+(macro: 0bin? (B) `(=:= (byte_size ,B) 0))
+(macro: 1bin? (B) `(=:= (byte_size ,B) 1))
+(macro: 2bin? (B) `(=:= (byte_size ,B) 2))
+(macro: 3bin? (B) `(=:= (byte_size ,B) 3))
+(macro: 4bin? (B) `(=:= (byte_size ,B) 4))
+(macro: 5bin? (B) `(=:= (byte_size ,B) 5))
+(macro: 6bin? (B) `(=:= (byte_size ,B) 6))
+(macro: 7bin? (B) `(=:= (byte_size ,B) 7))
+(macro: 8bin? (B) `(=:= (byte_size ,B) 8))
+(macro: 9bin? (B) `(=:= (byte_size ,B) 9))
+(macro: nbin? (N B) `(=:= (byte_size ,B) ,N))
+
+(macro: 0bit? (B) `(=:= (bit_size ,B) 0))
+(macro: 1bit? (B) `(=:= (bit_size ,B) 1))
+(macro: 2bit? (B) `(=:= (bit_size ,B) 2))
+(macro: 3bit? (B) `(=:= (bit_size ,B) 3))
+(macro: 4bit? (B) `(=:= (bit_size ,B) 4))
+(macro: 5bit? (B) `(=:= (bit_size ,B) 5))
+(macro: 6bit? (B) `(=:= (bit_size ,B) 6))
+(macro: 7bit? (B) `(=:= (bit_size ,B) 7))
+(macro: 8bit? (B) `(=:= (bit_size ,B) 8))
+(macro: 9bit? (B) `(=:= (bit_size ,B) 9))
+(macro: nbit? (N B) `(=:= (bit_size ,B) ,N))
+
+;; list
+(macro: 1@ (L) `(: lists nth 1 ,L))
+(macro: 2@ (L) `(: lists nth 2 ,L))
+(macro: 3@ (L) `(: lists nth 3 ,L))
+(macro: 4@ (L) `(: lists nth 4 ,L))
+(macro: 5@ (L) `(: lists nth 5 ,L))
+(macro: 6@ (L) `(: lists nth 6 ,L))
+(macro: 7@ (L) `(: lists nth 7 ,L))
+(macro: 8@ (L) `(: lists nth 8 ,L))
+(macro: 9@ (L) `(: lists nth 9 ,L))
+(macro: n@ (N L) `(: lists nth ,N ,L))
+
+(macro: 1>@ (L) `(: lists nthtail 1 ,L))
+(macro: 2>@ (L) `(: lists nthtail 2 ,L))
+(macro: 3>@ (L) `(: lists nthtail 3 ,L))
+(macro: 4>@ (L) `(: lists nthtail 4 ,L))
+(macro: 5>@ (L) `(: lists nthtail 5 ,L))
+(macro: 6>@ (L) `(: lists nthtail 6 ,L))
+(macro: 7>@ (L) `(: lists nthtail 7 ,L))
+(macro: 8>@ (L) `(: lists nthtail 8 ,L))
+(macro: 9>@ (L) `(: lists nthtail 9 ,L))
+(macro: n>@ (N L) `(: lists nthtail ,N ,L))
+
+(macro: 1>.@ (L) `(: lists nthtail 0 ,L))
+(macro: 2>.@ (L) `(: lists nthtail 1 ,L))
+(macro: 3>.@ (L) `(: lists nthtail 2 ,L))
+(macro: 4>.@ (L) `(: lists nthtail 3 ,L))
+(macro: 5>.@ (L) `(: lists nthtail 4 ,L))
+(macro: 6>.@ (L) `(: lists nthtail 5 ,L))
+(macro: 7>.@ (L) `(: lists nthtail 6 ,L))
+(macro: 8>.@ (L) `(: lists nthtail 7 ,L))
+(macro: 9>.@ (L) `(: lists nthtail 8 ,L))
+(macro: n>.@ (N L) `(: lists nthtail ,(-1. N) ,L))
+
+(macro: 1<@ (L) `(: lst first 0 ,L))
+(macro: 2<@ (L) `(: lst first 1 ,L))
+(macro: 3<@ (L) `(: lst first 2 ,L))
+(macro: 4<@ (L) `(: lst first 3 ,L))
+(macro: 5<@ (L) `(: lst first 4 ,L))
+(macro: 6<@ (L) `(: lst first 5 ,L))
+(macro: 7<@ (L) `(: lst first 6 ,L))
+(macro: 8<@ (L) `(: lst first 7 ,L))
+(macro: 9<@ (L) `(: lst first 8 ,L))
+(macro: n<@ (N L) `(: lst first ,(-1. N) ,L))
+
+(macro: 1<.@ (L) `(: lst first 1 ,L))
+(macro: 2<.@ (L) `(: lst first 2 ,L))
+(macro: 3<.@ (L) `(: lst first 3 ,L))
+(macro: 4<.@ (L) `(: lst first 4 ,L))
+(macro: 5<.@ (L) `(: lst first 5 ,L))
+(macro: 6<.@ (L) `(: lst first 6 ,L))
+(macro: 7<.@ (L) `(: lst first 7 ,L))
+(macro: 8<.@ (L) `(: lst first 8 ,L))
+(macro: 9<.@ (L) `(: lst first 9 ,L))
+(macro: n<.@ (N L) `(: lst first ,N ,L))
+
+(macro: 1! (L X) `(: lst set 1 ,L ,X))
+(macro: 2! (L X) `(: lst set 2 ,L ,X))
+(macro: 3! (L X) `(: lst set 3 ,L ,X))
+(macro: 4! (L X) `(: lst set 4 ,L ,X))
+(macro: 5! (L X) `(: lst set 5 ,L ,X))
+(macro: 6! (L X) `(: lst set 6 ,L ,X))
+(macro: 7! (L X) `(: lst set 7 ,L ,X))
+(macro: 8! (L X) `(: lst set 8 ,L ,X))
+(macro: 9! (L X) `(: lst set 9 ,L ,X))
+(macro: n! (N L X) `(: lst set ,N ,L ,X))
+
+(macro: 1-! (L) `(: lst delete 1 ,L))
+(macro: 2-! (L) `(: lst delete 2 ,L))
+(macro: 3-! (L) `(: lst delete 3 ,L))
+(macro: 4-! (L) `(: lst delete 4 ,L))
+(macro: 5-! (L) `(: lst delete 5 ,L))
+(macro: 6-! (L) `(: lst delete 6 ,L))
+(macro: 7-! (L) `(: lst delete 7 ,L))
+(macro: 8-! (L) `(: lst delete 8 ,L))
+(macro: 9-! (L) `(: lst delete 9 ,L))
+(macro: n-! (N L) `(: lst delete ,N ,L))
+
+(macro: 1+! (L X) `(: lst insert 1 ,L ,X))
+(macro: 2+! (L X) `(: lst insert 2 ,L ,X))
+(macro: 3+! (L X) `(: lst insert 3 ,L ,X))
+(macro: 4+! (L X) `(: lst insert 4 ,L ,X))
+(macro: 5+! (L X) `(: lst insert 5 ,L ,X))
+(macro: 6+! (L X) `(: lst insert 6 ,L ,X))
+(macro: 7+! (L X) `(: lst insert 7 ,L ,X))
+(macro: 8+! (L X) `(: lst insert 8 ,L ,X))
+(macro: 9+! (L X) `(: lst insert 9 ,L ,X))
+(macro: n+! (N L X) `(: lst insert ,N ,L ,X))
+
+;; tuple
+(macro: fst (T) `(tref ,T 1))
+(macro: snd (T) `(tref ,T 2))
+
+(macro: 1# (T) `(tref ,T 1))
+(macro: 2# (T) `(tref ,T 2))
+(macro: 3# (T) `(tref ,T 3))
+(macro: 4# (T) `(tref ,T 4))
+(macro: 5# (T) `(tref ,T 5))
+(macro: 6# (T) `(tref ,T 6))
+(macro: 7# (T) `(tref ,T 7))
+(macro: 8# (T) `(tref ,T 8))
+(macro: 9# (T) `(tref ,T 9))
+(macro: n# (N T) `(tref ,T ,N))
+
+(macro: 1$ (T V) `(tset ,T 1 ,V))
+(macro: 2$ (T V) `(tset ,T 2 ,V))
+(macro: 3$ (T V) `(tset ,T 3 ,V))
+(macro: 4$ (T V) `(tset ,T 4 ,V))
+(macro: 5$ (T V) `(tset ,T 5 ,V))
+(macro: 6$ (T V) `(tset ,T 6 ,V))
+(macro: 7$ (T V) `(tset ,T 7 ,V))
+(macro: 8$ (T V) `(tset ,T 8 ,V))
+(macro: 9$ (T V) `(tset ,T 9 ,V))
+(macro: n$ (N T V) `(tset ,T ,N ,V))
+
+(macro: 1+$ (T X) `(~ erlang:insert_element 1 ,T ,X))
+(macro: 2+$ (T X) `(~ erlang:insert_element 2 ,T ,X))
+(macro: 3+$ (T X) `(~ erlang:insert_element 3 ,T ,X))
+(macro: 4+$ (T X) `(~ erlang:insert_element 4 ,T ,X))
+(macro: 5+$ (T X) `(~ erlang:insert_element 5 ,T ,X))
+(macro: 6+$ (T X) `(~ erlang:insert_element 6 ,T ,X))
+(macro: 7+$ (T X) `(~ erlang:insert_element 7 ,T ,X))
+(macro: 8+$ (T X) `(~ erlang:insert_element 8 ,T ,X))
+(macro: 9+$ (T X) `(~ erlang:insert_element 9 ,T ,X))
+(macro: n+$ (N T X) `(~ erlang:insert_element ,N ,T ,X))
+
+(macro: 1-$ (T) `(~ erlang:delete_element 1 ,T))
+(macro: 2-$ (T) `(~ erlang:delete_element 2 ,T))
+(macro: 3-$ (T) `(~ erlang:delete_element 3 ,T))
+(macro: 4-$ (T) `(~ erlang:delete_element 4 ,T))
+(macro: 5-$ (T) `(~ erlang:delete_element 5 ,T))
+(macro: 6-$ (T) `(~ erlang:delete_element 6 ,T))
+(macro: 7-$ (T) `(~ erlang:delete_element 7 ,T))
+(macro: 8-$ (T) `(~ erlang:delete_element 8 ,T))
+(macro: 9-$ (T) `(~ erlang:delete_element 9 ,T))
+(macro: n-$ (N T) `(~ erlang:delete_element ,N ,T))
+
+;;int
+
+(macro: +1, (N) `(+ ,N 1))
+(macro: -1, (N) `(- ,N 1))
+
+;;logic
+(macro: !! (X) `(not ,X))
+(macro: && L `(andalso ,@L))
+(macro: || L `(orelse ,@L))
+
+;;infix
+(macro: .. `(,A ,B . ,T) `(,B ,A ,@T))
+(macro: ... `(,A ,B ,C . ,T) `(,C ,A ,B ,@T))
+(macro: .4 `(,A ,B ,C ,D . ,T) `(,D ,A ,B ,C ,@T))
+(macro: .5 `(,A ,B ,C ,D ,E . ,T) `(,E ,A ,B ,C ,D ,@T))
+
+;;bitwise
+(macro: .^ (A B) `(bxor ,A ,B))
+(macro: .& (A B) `(band ,A ,B))
+(macro: .| (A B) `(bor ,A ,B))
+(macro: .! (A) `(bnot ,A))
+(macro: .< (A B) `(bsl ,A ,B))
+(macro: .> (A B) `(bsr ,A ,B))
+
+;;term convertion
+(macro: itl (I) `(integer_to_list ,I))
+(macro: lti (S) `(list_to_integer ,S))
+
+(macro: its (I) `'(,I))
+
+(macro: itb (I) `(integer_to_binary ,I))
+(macro: bti (B) `(binary_to_integer ,B))
+
+(macro: atb
+	`(,A) `(atom_to_binary ,A 'utf8)
+	`(,A ,B) `(atom_to_binary ,A ,B))
+
+(macro: bta!
+	`(,B) `(binary_to_atom ,B 'utf8)
+	`(,B ,A) `(binary_to_atom ,B ,A))
+
+(macro: bta?
+	`(,B) `(try (binary_to_existing_atom ,B 'utf8) (catch (_T:V:S 'false)))
+	`(,B ,A) `(try (binary_to_existing_atom ,B ,A) (catch (_T:V:S 'false))))
+
+(macro: btp (B) `(list_to_pid (binary_to_list ,B)))
+
+(macro: atl (A) `(atom_to_list ,A))
+(macro: lta! (L) `(list_to_atom ,L))
+
+(macro: lta? (L) `(try (list_to_existing_atom ,L) (catch (_T:V:S 'false))))
+
+(macro: ltb (L) `(list_to_binary ,L))
+(macro: btl (B) `(binary_to_list ,B))
+
+(macro: ltt (L) `(list_to_tuple ,L))
+(macro: ttl (L) `(tuple_to_list ,L))
+
+(macro: ltp (L) `(list_to_pid ,L))
+(macro: ptl (P) `(pid_to_list ,P))
+
+;; binary
+(macro: b++ L `(binary ,@(fmap (\X. `(,X bytes)) L)))
+(macro: b++n L `(binary ,@(chain (\X. `((,X bytes) (#"\n" bytes))) L)))
+
+;;number radix conversion
+(macro: dtx (I) `(hd (~ lfe_io:format1 "~.16b" `(,,I))))
+(macro: dtd (I) `(hd (~ lfe_io:format1 "~.12b" `(,,I))))
+(macro: dto (I) `(hd (~ lfe_io:format1 "~.8b" `(,,I))))
+(macro: dtb (I) `(hd (~ lfe_io:format1 "~.2b" `(,,I))))
+
+(macro: stl (S) `(~ lfe_io:fwrite "~w~n" `(,,S) ~))
+
+;;comprehension
+
+(macro: ->| L `(lc ,@L))
+(macro: ~>| L `(bc ,@L))
+(macro: =>| L `(qlc ,@L))
+(macro: =>> L `(match-spec ,@L))
+
+;;otp
+(macro: ms L `(match-spec ,@L))
+(macro: regex (X)
+	`',(->*
+		Env = (: lfe_env add_mbinding 'b++
+			'(lambda (L _Env) `(binary ,@(fmap
+				(lambda (X) `(,X bytes)) L))) (~ lfe_env:new))
+		B = (:+ X
+			Y (&lst? Y) (eval Y Env)
+			Y (&bin? Y) Y)
+    	`#(ok ,Pattern) = (~ re:compile B '(dotall ungreedy))
+		Pattern))
+
+(macro: grep (Bin Regex)
+	`(: re run ,Bin ,Regex '(#(capture all_but_first binary))))
+
+(macro: sys@ L `(: erlang system_info ,L))
+(macro: sys! L `(: erlang system_flag ,L))
+;TODO put mem into system@
+;(macro: mem@ L (->
+;	I = (:+ L
+;		`(,L) (&atm? L) `((quote ,L))
+;		() ())
+;	`(: erlang memory ,@I)))
+
+(macro: p@ `(,H . ,T) (->
+	I = (:+ T
+		`(,X) (&atm? X) `((quote ,X))
+		() ())
+	`(:- (remote? ,H)
+		(~ rpc:pinfo ,H ,@I)
+		(process_info ,H ,@I))))
+
+(macro: p|@ (P) `(p@ ,P links))
+(macro: p:@ (P) `(p@ ,P monitors))
+(macro: p:<@ (P) `(p@ ,P monitored_by))
+(macro: ps@ (P) `(p@ ,P status))
+(macro: pb@ (P) `(p@ ,P binary))
+(macro: pp@ (P) `(p@ ,P priority))
+(macro: pd@ (P) `(p@ ,P dictionary))
+(macro: pm@ (P) `(p@ ,P messages))
+(macro: p?m@ (P) `(p@ ,P message_queue_len))
+(macro: pr@ (P) `(p@ ,P registered_name))
+(macro: pgl@ (P) `(p@ ,P group_leader))
+(macro: pcf@ (P) `(p@ ,P current_function))
+(macro: pcl@ (P) `(p@ ,P current_location))
+(macro: p?r@ (P) `(p@ ,P reducutions))
+(macro: pgc@ (P) `(p@ ,P garbage_collection))
+(macro: pgc*@ (P) `(p@ ,P garbage_collection_info))
+
+(macro: p#?@ (P) `(p@ ,P trap_exit))
+(macro: p?s@ (P) `(p@ ,P stack_size))
+(macro: p?h@ (P) `(p@ ,P heap_size))
+(macro: p?a@ (P) `(p@ ,P total_heap_size))
+(macro: pst@ (P) `(p@ ,P current_stacktrace))
+
+(macro: pid@ (X Y Z) `(: c pid ,X ,Y ,Z))
+
+(macro: pt! (V) `(process_flag 'trap_exit ,V))
+(macro: pti^! () '(-> `#(trap_exit ,V) = (pt@) (pt! (/ V))))
+
+(macro: +ref () `(make_ref))
+(macro: +unique () `(~ erlang:unique_integer))
+
+(macro: p@ () '(processes))
+
+(macro: +r (N P) `(register ,N ,P))
+(macro: -r (N) `(unregister ,N))
+(macro: +R (N P) `(: global register ,N ,P))
+(macro: -R (N P) `(: global unregister ,N))
+
+(macro: ?r (N) `(whereis ,N))
+(macro: ?R (N) `(: global whereis_name ,N))
+
+(macro: r@ () '(registered))
+(macro: R@ () '(: global registered_names))
+(macro: r! (N P) `(progn (unregister ,N) (register ,N ,P)))
+(macro: R! (N P) `(: global re_register_name ,N , P))
+
+;;type
+(macro: print
+	`(,S) `(flatten (~ lfe_io:format1 ,S ()))
+	`(,S ,L) `(flatten (~ lfe_io:format1 ,S ,L)))
+
+(macro: log
+	`(,X) (&lst? X) `(~ lfe_io:format ,(++ X "~n") '())
+	`(,X) `(~ lfe_io:format "~p~n" (list ,X))
+	`(,X ,Y) `(~ lfe_io:format ,(++ X "~n") ,Y))
+
+(macro: log-
+	`(,X) (&lst? X) `(~ lfe_io:format ,(++ "\t" X "~n") '())
+	`(,X) `(~ lfe_io:format "\t~p~n" (list ,X))
+	`(,X ,Y) `(~ lfe_io:format ,(++ "\t" x "~n") ,Y))
+
+(macro: log--
+	`(,X) (&lst? X) `(~ lfe_io:format ,(++ "\t\t" X "~n") '())
+	`(,X) `(~ lfe_io:format "\t\t~p~n" (list ,X))
+	`(,X ,Y) `(~ lfe_io:format ,(++ "\t\t" X "~n") ,Y))
+
+(macro: log_off () `(macro: log _L `(->)))
+
+(macro: @
+	`(,S) `(macroexpand-1 ,S $ENV)
+	L `(macroexpand-1 ,@L))
+
+(macro: @*
+	`(,S) `(macroexpand ,S $ENV)
+	L `(macroexpand ,@L))
+
+(macro: @@
+	`(,S) `(macroexpand-all ,S $ENV)
+	L `(macroexpand-all ,@L))
+
+;;math
+(macro: pow (A B) `(~ math:pow ,A ,B))
+(macro: ** (A B) `(~ math:pow ,A ,B))
+;(macro: **, (A B) (integer verrsion))
+
+;;lists
+(macro: fold L `(~ lists:foldl ,@L))
+(macro: fmap L `(~ lists:map ,@L))
+(macro: filter L `(~ lists:filter ,@L))
+(macro: flatten (L) `(~ lists:flatten ,L))
+(macro: foreach L `(~ lists:foreach ,@L))
+(macro: reduce L `(~ lists:foldr ,@L))
+(macro: reverse L `(~ lists:reverse ,@L))
+(macro: chain L `(~ lists:flatmap ,@L))
+(macro: each L `(~ lists:foreach ,@L))
+(macro: take L `(~ lists:takehile ,@L))
+(macro: drop L `(~ lists:dropwhile ,@L))
+(macro: split L `(~ lists:splitwith ,@L))
+(macro: member L `(~ lists:member ,@L))
+(macro: append (A B) `(~ lists:append ,A ,B))
+(macro: all? L `(~ lists:all ,@L))
+(macro: any? L `(~ lists:any ,@L))
+(macro: in? (H L) `(~ lists:member ,H ,L))
+
+(macro: macro L `(macro: ,@L))
+(macro: func L `(func: ,@L))
+(macro: record L `(record: ,@L))
+;(macro: spec L `(spec ,@L))
+;(macro: type L `(type ,@L))
+;(macro: some L `(some: ,@L))

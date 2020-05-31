@@ -1,0 +1,10 @@
+(macro: reset () '(->
+	(reset-environment)
+	(~ s:s)))
+
+;;hipe_bifs shortcut
+(macro: show_pcb (Pid) `(~ hipe_bifs:show_pcb ,Pid))
+(macro: show_stack (Pid) `(~ hipe_bifs:show_estack ,Pid))
+(macro: show_heap (Pid) `(~ hipe_bifs:show_heap ,Pid))
+(macro: show_nstack (Pid) `(~ hipe_bifs:show_nstack ,Pid))
+(macro: show_term (T) `(~ hipe_bifs:show_term ,T))

@@ -1,0 +1,9 @@
+(macro: default_int () 12)
+
+(macro: default_list () `',(~ lists:seq 0 (- (default_int) 1)))
+
+(macro: default_bin () #"Oh the Supreme Father! Oh the Source of the Universe! Oh the Father of the World, our Strength and Support! Oh compassionate Lord, Gracious to all! Oh the incomparable teacher outside of any tradition! Oh the Supreme Lord! Gracefully send down to us The gift of right thinking, So we can serve humanity And make this world a paradise.")
+
+(macro: default_str () `',(btl (default_bin)))
+
+(macro: default_ubf () #"#{'fruits',#'orange'&'pear'&'apple'&}&{'people',#'robert'&'mike'&'joe'&}&$")

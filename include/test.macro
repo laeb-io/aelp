@@ -1,0 +1,3 @@
+(macro: should= (X Y) `(:-!= ,X ,Y
+    (error (ltb (: lfe_io format1 "~p should equal to ~p" (list ,X ,Y))))
+    'ok))
