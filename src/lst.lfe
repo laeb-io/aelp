@@ -82,3 +82,17 @@
 	(`(,H . ,T) N K S `#(,C ,Part)) (&< C N) (:- (:. K H)
 		(unchain T N K S `#(,C (,H . ,Part)))
 		(unchain T N K S `#(,(+1, C) (,H . ,Part)))))
+
+(func: search
+    (X L) (&!fun? X) (search1 X L 1)
+    (X L) (search2 X L 1))
+
+(func: search1
+    (_ '() N) 'false
+    (X `(,X . ,_) N) N
+    (X `(,_ . ,T)  N) (search1 X T (+1, N)))
+
+(func: search2
+    (_ '() N) 'false
+    (F `(,H . ,T) N) (:- (:. F H) N (search2 F T (+1, N))))
+    

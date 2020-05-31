@@ -166,6 +166,8 @@
 (macro: \XY. (A) `(\ (X Y) ,A))
 (macro: \XYZ. (A) `(\ (X Y Z) ,A))
 
+(macro: \X.= (A) `(\ (X) (=== X ,A)))
+
 (macro: \Y. (A) `(\ (Y) ,A))
 (macro: \Z. (A) `(\ (Z) ,A))
 

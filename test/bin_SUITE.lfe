@@ -1,7 +1,7 @@
 (defmodule bin_SUITE
 	(export all))
 
-(include-lib "aelisp/include/aelisp.macro")
+(include-lib "aelp/include/aelp.macro")
 
 (func: all () '(first last reverse_to_list split_right))
 
@@ -14,7 +14,7 @@
 (func: reverse_to_list (_) (->
 	X = (list #\d #\c #\b #\a)
 	Y = (~ bin:reverse_to_list #"abcd")
-	(assert (=:= X Y))))
+	(=== X Y)))
 
 (func: split_right (_) (->
 	#(#"a/b" #"/c.lfe") = (~ bin:split_right #"a/b/b/c.lfe" #"/b")))

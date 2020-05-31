@@ -1,6 +1,6 @@
 (defmodule macro_SUITE
 	(export all))
 
-(include-lib "aelisp/include/aelisp.macro")
+(include-lib "aelp/include/aelp.macro")
 
-(func: all () '(expand_->))
+(func: all () '())
