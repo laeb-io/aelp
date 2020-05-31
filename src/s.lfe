@@ -2,7 +2,7 @@
 	(export-macro s)
 	(export all))
 
-(include-lib "../include/aelisp.macro")
+(include-lib "../include/aelp.macro")
 (include-lib "../include/constant.macro")
 (include-lib "../include/s.macro")
 

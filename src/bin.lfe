@@ -1,7 +1,7 @@
 (defmodule bin
 	(export all))
 
-(include-lib "../include/aelisp.macro")
+(include-lib "../include/aelp.macro")
 
 (func: first (B N)
 	(~ binary:part B 0 N))

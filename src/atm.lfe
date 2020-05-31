@@ -1,6 +1,6 @@
 (defmodule atm
 	(export all))
 
-(include-lib "../include/aelisp.macro")
+(include-lib "../include/aelp.macro")
 
 (func: + (A B) (lta! (++ (atl A) (atl B))))

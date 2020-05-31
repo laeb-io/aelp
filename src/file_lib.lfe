@@ -1,7 +1,7 @@
 (defmodule file_lib
 	(export all))
 
-(include-lib "../include/aelisp.macro")
+(include-lib "../include/aelp.macro")
 
 (func: find_source (Path) (->*
 	FileName = (~ filename:basename Path)

@@ -1,7 +1,7 @@
 (defmodule lst
 	(export all))
 
-(include-lib "../include/aelisp.macro")
+(include-lib "../include/aelp.macro")
 
 (func: reverse_to_binary
 	'() #""

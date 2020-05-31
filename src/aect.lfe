@@ -1,7 +1,7 @@
 (defmodule aect
 	(export all))
 
-(include-lib "../include/aelisp.macro")
+(include-lib "../include/aelp.macro")
 
 (func: run_suites (Suites) 
 	(~ ct:run_test `(#(dir "ebin") #(suite ,Suites) #(auto_compile false)

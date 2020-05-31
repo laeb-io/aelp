@@ -1,7 +1,7 @@
 (defmodule str
 	(export all))
 
-(include-lib "../include/aelisp.macro")
+(include-lib "../include/aelp.macro")
 
 (macro: upper_char? (X) `(.. (.. ,X >= #\A) && (.. ,X <= #\Z)))
 
