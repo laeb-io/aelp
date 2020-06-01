@@ -1,5 +1,4 @@
 *.swp
 *.swo
-ebin/*.beam
 .DS_Store
 test/log
