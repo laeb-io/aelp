@@ -408,7 +408,7 @@
 (macro: 9@ (L) `(: lists nth 9 ,L))
 (macro: n@ (N L) `(: lists nth ,N ,L))
 
-(macro: 1>@ (L) `(: lists nthtail 1 ,L))
+(macro: 1>@ (L) `(tl ,L))
 (macro: 2>@ (L) `(: lists nthtail 2 ,L))
 (macro: 3>@ (L) `(: lists nthtail 3 ,L))
 (macro: 4>@ (L) `(: lists nthtail 4 ,L))

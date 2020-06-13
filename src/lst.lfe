@@ -84,15 +84,31 @@
 		(unchain T N K S `#(,(+1, C) (,H . ,Part)))))
 
 (func: search
-    (X L) (&!fun? X) (search1 X L 1)
-    (X L) (search2 X L 1))
+    (_ _ '()) 'false
+    (X _ `(,X . ,_)) X
+    (_ Y `(,Y . ,_)) Y
+    (X Y `(,_ . ,T)) (search X Y T))
 
-(func: search1
+(func: search
+    (_ _ _ '()) 'false
+    (X _ _ `(,X . ,_)) X
+    (_ Y _ `(,Y . ,_)) Y
+    (_ _ Z `(,Z . ,_)) Z
+    (X Y Z `(,_ . ,T)) (search X Y Z T))
+    
+(func: postion
+    (X L) (&!fun? X) (position1 X L 1)
+    (X L) (position2 X L 1))
+
+(func: position
+    (X L N) (&!fun? X) (position1 X L N)
+    (X L N) (position2 X L N))
+
+(func: position1
     (_ '() N) 'false
     (X `(,X . ,_) N) N
-    (X `(,_ . ,T)  N) (search1 X T (+1, N)))
+    (X `(,_ . ,T)  N) (position1 X T (+1, N)))
 
-(func: search2
+(func: position2
     (_ '() N) 'false
-    (F `(,H . ,T) N) (:- (:. F H) N (search2 F T (+1, N))))
-    
+    (F `(,H . ,T) N) (:- (:. F H) N (position2 F T (+1, N))))
